@@ -131,22 +131,12 @@ while (running)
                     Console.WriteLine("Invalid check-out date.");
                     break;
                 }
-
-                Console.Write("Enter Total Amount: ");
-                if (!decimal.TryParse(
-                    Console.ReadLine(), out decimal totalAmount))
-                {
-                    Console.WriteLine("Invalid amount.");
-                    break;
-                }
-
                 Booking booking = new Booking
                 {
                     RoomId = roomId,
                     GuestId = guestId,
                     CheckInDate = checkIn,
                     CheckOutDate = checkOut,
-                    TotalAmount = totalAmount,
                     BookingStatus = BookingStatus.Confirmed
                 };
 

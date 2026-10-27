@@ -14,55 +14,43 @@ namespace HotelManagementSystem.Services
 
         public void AddBooking(Booking booking)
         {
-            // 1. Check whether the booking object is valid
             if (booking == null)
             {
                 throw new ArgumentNullException(nameof(booking));
             }
 
-            // 2. Validate Room ID
             if (booking.RoomId <= 0)
             {
                 throw new ArgumentException(
                     "Room ID must be greater than zero.");
             }
 
-            // 3. Validate Guest ID
             if (booking.GuestId <= 0)
             {
                 throw new ArgumentException(
                     "Guest ID must be greater than zero.");
             }
 
-            // 4. Check whether the room exists
-            if (!roomRepository.RoomExists(booking.RoomId))
+            Room? room = roomRepository.GetRoomById(booking.RoomId);
+
+            if (room == null)
             {
                 throw new InvalidOperationException(
                     "Room does not exist.");
             }
 
-            // 5. Check whether the guest exists
             if (!guestRepository.GuestExists(booking.GuestId))
             {
                 throw new InvalidOperationException(
                     "Guest does not exist.");
             }
 
-            // 6. Validate booking dates
             if (booking.CheckOutDate.Date <= booking.CheckInDate.Date)
             {
                 throw new ArgumentException(
                     "Check-out date must be after check-in date.");
             }
 
-            // 7. Validate total amount
-            if (booking.TotalAmount < 0)
-            {
-                throw new ArgumentException(
-                    "Total amount cannot be negative.");
-            }
-
-            // 8. Validate booking status
             if (!Enum.IsDefined(
                 typeof(BookingStatus), booking.BookingStatus))
             {
@@ -70,7 +58,6 @@ namespace HotelManagementSystem.Services
                     "Invalid booking status.");
             }
 
-            // 9. Check room availability for the selected dates
             if (booking.BookingStatus == BookingStatus.Confirmed &&
                 !bookingRepository.IsRoomAvailable(
                     booking.RoomId,
@@ -81,8 +68,26 @@ namespace HotelManagementSystem.Services
                     "Room is already booked for the selected dates.");
             }
 
-            // 10. Save the booking
+            // Calculate the number of nights
+            int numberOfNights =
+                (booking.CheckOutDate.Date -
+                 booking.CheckInDate.Date).Days;
+
+            // Calculate the total booking amount
+            booking.TotalAmount =
+                room.PricePerNight * numberOfNights;
+
+            // Save the booking
             bookingRepository.AddBooking(booking);
+
+            Console.WriteLine(
+                $"Number of nights: {numberOfNights}");
+
+            Console.WriteLine(
+                $"Price per night: {room.PricePerNight:C}");
+
+            Console.WriteLine(
+                $"Total booking amount: {booking.TotalAmount:C}");
         }
 
         public List<Booking> GetAllBookings()
