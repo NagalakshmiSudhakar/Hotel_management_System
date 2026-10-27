@@ -1,8 +1,6 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.Text;
-
-
 using HotelManagementSystem.Models;
 using HotelManagementSystem.Repositories;
 
@@ -21,6 +19,9 @@ namespace HotelManagementSystem.Services
 
         public void AddBooking(Booking booking)
         {
+            if (booking == null)
+                throw new ArgumentNullException(nameof(booking));
+
             if (booking.RoomId <= 0)
                 throw new ArgumentException("Invalid room ID.");
 

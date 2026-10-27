@@ -1,7 +1,6 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.Text;
-
 using Microsoft.Data.SqlClient;
 using HotelManagementSystem.Models;
 
@@ -16,24 +15,31 @@ namespace HotelManagementSystem.Repositories
         {
             using SqlConnection connection = database.GetConnection();
 
-            string query = @"INSERT INTO Guests
-                (GuestName, PhoneNumber, Email, Address)
+            string query = @"
+                INSERT INTO Guests
+                    (GuestName, PhoneNumber, Email, Address)
                 VALUES
-                (@GuestName, @PhoneNumber, @Email, @Address)";
+                    (@GuestName, @PhoneNumber, @Email, @Address)";
 
             using SqlCommand command = new SqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@GuestName", guest.GuestName);
             command.Parameters.AddWithValue("@PhoneNumber", guest.PhoneNumber);
+
             command.Parameters.AddWithValue(
-                "@Email", (object?)guest.Email ?? DBNull.Value);
+                "@Email",
+                string.IsNullOrWhiteSpace(guest.Email)
+                    ? DBNull.Value
+                    : guest.Email);
+
             command.Parameters.AddWithValue(
-                "@Address", (object?)guest.Address ?? DBNull.Value);
+                "@Address",
+                string.IsNullOrWhiteSpace(guest.Address)
+                    ? DBNull.Value
+                    : guest.Address);
 
             connection.Open();
             command.ExecuteNonQuery();
-
-            Console.WriteLine("Guest added successfully!");
         }
 
         public List<Guest> GetAllGuests()
@@ -42,7 +48,9 @@ namespace HotelManagementSystem.Repositories
 
             using SqlConnection connection = database.GetConnection();
 
-            string query = "SELECT * FROM Guests";
+            string query = @"
+                SELECT GuestId, GuestName, PhoneNumber, Email, Address
+                FROM Guests";
 
             using SqlCommand command = new SqlCommand(query, connection);
 
@@ -67,6 +75,20 @@ namespace HotelManagementSystem.Repositories
             }
 
             return guests;
+        }
+
+        public bool GuestExists(int guestId)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = "SELECT COUNT(1) FROM Guests WHERE GuestId = @GuestId";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@GuestId", guestId);
+
+            connection.Open();
+
+            return Convert.ToInt32(command.ExecuteScalar()) > 0;
         }
     }
 }

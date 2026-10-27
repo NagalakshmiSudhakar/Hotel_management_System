@@ -1,8 +1,6 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.Text;
-
-
 using Microsoft.Data.SqlClient;
 using HotelManagementSystem.Models;
 
@@ -17,10 +15,11 @@ namespace HotelManagementSystem.Repositories
         {
             using SqlConnection connection = database.GetConnection();
 
-            string query = @"INSERT INTO Rooms
-                (RoomNumber, RoomType, PricePerNight, RoomStatus)
+            string query = @"
+                INSERT INTO Rooms
+                    (RoomNumber, RoomType, PricePerNight, RoomStatus)
                 VALUES
-                (@RoomNumber, @RoomType, @PricePerNight, @RoomStatus)";
+                    (@RoomNumber, @RoomType, @PricePerNight, @RoomStatus)";
 
             using SqlCommand command = new SqlCommand(query, connection);
 
@@ -31,8 +30,6 @@ namespace HotelManagementSystem.Repositories
 
             connection.Open();
             command.ExecuteNonQuery();
-
-            Console.WriteLine("Room added successfully!");
         }
 
         public List<Room> GetAllRooms()
@@ -41,7 +38,10 @@ namespace HotelManagementSystem.Repositories
 
             using SqlConnection connection = database.GetConnection();
 
-            string query = "SELECT * FROM Rooms";
+            string query = @"
+                SELECT RoomId, RoomNumber, RoomType,
+                       PricePerNight, RoomStatus
+                FROM Rooms";
 
             using SqlCommand command = new SqlCommand(query, connection);
 
@@ -63,6 +63,53 @@ namespace HotelManagementSystem.Repositories
             }
 
             return rooms;
+        }
+
+        public Room? GetRoomById(int roomId)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = @"
+                SELECT RoomId, RoomNumber, RoomType,
+                       PricePerNight, RoomStatus
+                FROM Rooms
+                WHERE RoomId = @RoomId";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@RoomId", roomId);
+
+            connection.Open();
+
+            using SqlDataReader reader = command.ExecuteReader();
+
+            if (reader.Read())
+            {
+                return new Room
+                {
+                    RoomId = Convert.ToInt32(reader["RoomId"]),
+                    RoomNumber = reader["RoomNumber"].ToString()!,
+                    RoomType = reader["RoomType"].ToString()!,
+                    PricePerNight = Convert.ToDecimal(reader["PricePerNight"]),
+                    RoomStatus = Enum.Parse<RoomStatus>(
+                        reader["RoomStatus"].ToString()!)
+                };
+            }
+
+            return null;
+        }
+
+        public bool RoomExists(int roomId)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = "SELECT COUNT(1) FROM Rooms WHERE RoomId = @RoomId";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@RoomId", roomId);
+
+            connection.Open();
+
+            return Convert.ToInt32(command.ExecuteScalar()) > 0;
         }
     }
 }
