@@ -1,8 +1,6 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
-using System.Text;
-
-
 using Microsoft.Data.SqlClient;
 using HotelManagementSystem.Models;
 
@@ -12,6 +10,37 @@ namespace HotelManagementSystem.Repositories
     {
         private readonly DatabaseConnection database =
             new DatabaseConnection();
+
+        public bool IsRoomAvailable(
+            int roomId,
+            DateTime checkInDate,
+            DateTime checkOutDate)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = @"
+                SELECT COUNT(*)
+                FROM Bookings
+                WHERE RoomId = @RoomId
+                  AND BookingStatus = 'Confirmed'
+                  AND CheckInDate < @CheckOutDate
+                  AND CheckOutDate > @CheckInDate";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@RoomId", roomId);
+            command.Parameters.AddWithValue(
+                "@CheckInDate", checkInDate.Date);
+            command.Parameters.AddWithValue(
+                "@CheckOutDate", checkOutDate.Date);
+
+            connection.Open();
+
+            int conflictingBookings =
+                Convert.ToInt32(command.ExecuteScalar());
+
+            return conflictingBookings == 0;
+        }
 
         public void AddBooking(Booking booking)
         {
@@ -29,9 +58,12 @@ namespace HotelManagementSystem.Repositories
 
             command.Parameters.AddWithValue("@RoomId", booking.RoomId);
             command.Parameters.AddWithValue("@GuestId", booking.GuestId);
-            command.Parameters.AddWithValue("@CheckInDate", booking.CheckInDate.Date);
-            command.Parameters.AddWithValue("@CheckOutDate", booking.CheckOutDate.Date);
-            command.Parameters.AddWithValue("@TotalAmount", booking.TotalAmount);
+            command.Parameters.AddWithValue(
+                "@CheckInDate", booking.CheckInDate.Date);
+            command.Parameters.AddWithValue(
+                "@CheckOutDate", booking.CheckOutDate.Date);
+            command.Parameters.AddWithValue(
+                "@TotalAmount", booking.TotalAmount);
             command.Parameters.AddWithValue(
                 "@BookingStatus", booking.BookingStatus.ToString());
 
@@ -74,4 +106,3 @@ namespace HotelManagementSystem.Repositories
         }
     }
 }
-
