@@ -17,6 +17,7 @@ while (running)
     Console.WriteLine("4. View All Guests");
     Console.WriteLine("5. Add Booking");
     Console.WriteLine("6. View All Bookings");
+    Console.WriteLine("7. Cancel Booking");
     Console.WriteLine("0. Exit");
     Console.Write("Enter your choice: ");
 
@@ -157,6 +158,18 @@ while (running)
                         $"Amount: {item.TotalAmount} | " +
                         $"Status: {item.BookingStatus}");
                 }
+                break;
+
+            case "7":
+                Console.Write("Enter Booking ID to cancel: ");
+
+                if (!int.TryParse(Console.ReadLine(), out int bookingId))
+                {
+                    Console.WriteLine("Invalid Booking ID.");
+                    break;
+                }
+
+                bookingService.CancelBooking(bookingId);
                 break;
 
             case "0":

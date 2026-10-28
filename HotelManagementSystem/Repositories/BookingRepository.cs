@@ -29,10 +29,8 @@ namespace HotelManagementSystem.Repositories
             using SqlCommand command = new SqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@RoomId", roomId);
-            command.Parameters.AddWithValue(
-                "@CheckInDate", checkInDate.Date);
-            command.Parameters.AddWithValue(
-                "@CheckOutDate", checkOutDate.Date);
+            command.Parameters.AddWithValue("@CheckInDate", checkInDate.Date);
+            command.Parameters.AddWithValue("@CheckOutDate", checkOutDate.Date);
 
             connection.Open();
 
@@ -58,12 +56,9 @@ namespace HotelManagementSystem.Repositories
 
             command.Parameters.AddWithValue("@RoomId", booking.RoomId);
             command.Parameters.AddWithValue("@GuestId", booking.GuestId);
-            command.Parameters.AddWithValue(
-                "@CheckInDate", booking.CheckInDate.Date);
-            command.Parameters.AddWithValue(
-                "@CheckOutDate", booking.CheckOutDate.Date);
-            command.Parameters.AddWithValue(
-                "@TotalAmount", booking.TotalAmount);
+            command.Parameters.AddWithValue("@CheckInDate", booking.CheckInDate.Date);
+            command.Parameters.AddWithValue("@CheckOutDate", booking.CheckOutDate.Date);
+            command.Parameters.AddWithValue("@TotalAmount", booking.TotalAmount);
             command.Parameters.AddWithValue(
                 "@BookingStatus", booking.BookingStatus.ToString());
 
@@ -71,6 +66,59 @@ namespace HotelManagementSystem.Repositories
             command.ExecuteNonQuery();
 
             Console.WriteLine("Booking added successfully!");
+        }
+
+        public Booking? GetBookingById(int bookingId)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = @"
+                SELECT BookingId, RoomId, GuestId, CheckInDate,
+                       CheckOutDate, TotalAmount, BookingStatus
+                FROM Bookings
+                WHERE BookingId = @BookingId";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@BookingId", bookingId);
+
+            connection.Open();
+
+            using SqlDataReader reader = command.ExecuteReader();
+
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            return new Booking
+            {
+                BookingId = Convert.ToInt32(reader["BookingId"]),
+                RoomId = Convert.ToInt32(reader["RoomId"]),
+                GuestId = Convert.ToInt32(reader["GuestId"]),
+                CheckInDate = Convert.ToDateTime(reader["CheckInDate"]),
+                CheckOutDate = Convert.ToDateTime(reader["CheckOutDate"]),
+                TotalAmount = Convert.ToDecimal(reader["TotalAmount"]),
+                BookingStatus = Enum.Parse<BookingStatus>(
+                    reader["BookingStatus"].ToString()!)
+            };
+        }
+
+        public bool CancelBooking(int bookingId)
+        {
+            using SqlConnection connection = database.GetConnection();
+
+            string query = @"
+                UPDATE Bookings
+                SET BookingStatus = 'Cancelled'
+                WHERE BookingId = @BookingId
+                  AND BookingStatus = 'Confirmed'";
+
+            using SqlCommand command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@BookingId", bookingId);
+
+            connection.Open();
+
+            return command.ExecuteNonQuery() > 0;
         }
 
         public List<Booking> GetAllBookings()

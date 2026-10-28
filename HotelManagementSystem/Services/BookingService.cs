@@ -89,7 +89,38 @@ namespace HotelManagementSystem.Services
             Console.WriteLine(
                 $"Total booking amount: {booking.TotalAmount:C}");
         }
+        public void CancelBooking(int bookingId)
+        {
+            if (bookingId <= 0)
+            {
+                throw new ArgumentException(
+                    "Booking ID must be greater than zero.");
+            }
 
+            Booking? booking = bookingRepository.GetBookingById(bookingId);
+
+            if (booking == null)
+            {
+                throw new InvalidOperationException(
+                    "Booking not found.");
+            }
+
+            if (booking.BookingStatus != BookingStatus.Confirmed)
+            {
+                throw new InvalidOperationException(
+                    "Only confirmed bookings can be cancelled.");
+            }
+
+            bool cancelled = bookingRepository.CancelBooking(bookingId);
+
+            if (!cancelled)
+            {
+                throw new InvalidOperationException(
+                    "Booking could not be cancelled. Please try again.");
+            }
+
+            Console.WriteLine("Booking cancelled successfully!");
+        }
         public List<Booking> GetAllBookings()
         {
             return bookingRepository.GetAllBookings();
